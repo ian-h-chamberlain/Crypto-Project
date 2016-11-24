@@ -1,8 +1,11 @@
+from phe import paillier
+
 # ElectionBoard - contains code for managing voters and results
 
 class ElectionBoard:
 
     def __init__(self):
+        self.public_key, self.private_key = paillier.generate_paillier_keypair()
         self.registeredVoters = []
         self.signature = "SIGNED"
 
@@ -22,12 +25,14 @@ class ElectionBoard:
         res = []
         for i in vote:
             #TODO: encrypt votes with blind signature
-            res.append((self.signature, i))
+            res.append(self.public_key.encrypt(i))
         return res
 
     # get encrypted totals and report them
-    def reportResults(self, results):
+    def reportResults(self, encrypted_results):
         # TODO: decrypt totals
+
+        results = [self.private_key.decrypt(x) for x in encrypted_results]
 
         index = -1
         total = -1

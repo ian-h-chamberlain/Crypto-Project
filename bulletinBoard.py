@@ -15,13 +15,13 @@ class BulletinBoard:
         total = 0
 
         for i in vote:
-            total = total + i[1]    # for now, just use second part of tuple
-
-        if total != 1:
-            print("Invalid vote detected!")
-            return # cannot count this vote
+            total = total + i    # for now, just use second part of tuple
 
         # TODO: engage ZKP
+        #if total != 1:
+            #print("Invalid vote detected!")
+            #return # cannot count this vote
+
         self.voteBoard.append(vote)
 
     def tallyResults(self):
@@ -32,7 +32,7 @@ class BulletinBoard:
         # now actually tally the votes
         for vote in self.voteBoard:
             for i in range(len(vote)):
-                totals[i] = totals[i] + vote[i][1]
+                totals[i] = totals[i] + vote[i]
 
         # report results to EM
         self.electionBoard.reportResults(totals)
