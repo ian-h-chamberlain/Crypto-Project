@@ -1,4 +1,5 @@
 import sys
+from phe import paillier
 from electionBoard import ElectionBoard
 from bulletinBoard import BulletinBoard
 
@@ -19,7 +20,7 @@ def main():
 
         # TODO: encrypt voter number
         voterID = getInt("\nPlease enter your voter registration number: ")
-        # may also need to register voter before actually voting
+        # TODO: also need to register voter before actually voting
 
         # TODO: encrypt votes
         print("Candidate choices: " + str([i for i in range(numCandidates)]))
@@ -38,7 +39,7 @@ def main():
 
         # get vote signed by EM
         signedVote = EM.registerVote(voterID, vote)
-        
+
         if signedVote != None:
             BB.addVote(signedVote)
 

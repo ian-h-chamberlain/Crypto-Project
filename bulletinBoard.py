@@ -1,3 +1,4 @@
+from phe import paillier
 
 # BulletinBoard - tally votes and send results to EM
 
@@ -32,7 +33,8 @@ class BulletinBoard:
         # now actually tally the votes
         for vote in self.voteBoard:
             for i in range(len(vote)):
-                totals[i] = totals[i] + vote[i]
+                paillierVote = paillier.EncryptedNumber(self.electionBoard.public_key, vote[i])
+                totals[i] = totals[i] + paillierVote
 
         # report results to EM
-        self.electionBoard.reportResults(totals)
+        self.electionBoard.reportResults([i.ciphertext() for i in totals])

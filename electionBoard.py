@@ -7,7 +7,6 @@ class ElectionBoard:
     def __init__(self):
         self.public_key, self.private_key = paillier.generate_paillier_keypair()
         self.registeredVoters = []
-        self.signature = "SIGNED"
 
     # check if the voter has registered/voted yet, and sign their vote if not
     def registerVote(self, voterID, vote):
@@ -25,14 +24,15 @@ class ElectionBoard:
         res = []
         for i in vote:
             #TODO: encrypt votes with blind signature
-            res.append(self.public_key.encrypt(i))
+            res.append(self.public_key.encrypt(i).ciphertext())
+        print([str(i)[0:10] for i in res])
         return res
 
     # get encrypted totals and report them
     def reportResults(self, encrypted_results):
         # TODO: decrypt totals
 
-        results = [self.private_key.decrypt(x) for x in encrypted_results]
+        results = [self.private_key.raw_decrypt(x) for x in encrypted_results]
 
         index = -1
         total = -1
