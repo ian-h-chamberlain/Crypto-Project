@@ -1,5 +1,8 @@
 import sys
 from phe import paillier
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
+import Crypto.Random
 from electionBoard import ElectionBoard
 from bulletinBoard import BulletinBoard
 
@@ -37,11 +40,36 @@ def main():
         vote = [0 for i in range(numCandidates)]
         vote[voteIndex] = 1
 
-        # get vote signed by EM
-        signedVote = EM.registerVote(voterID, vote)
+        # now blind the votes before sending to EM to sign
+        blindVote = []
+        rlist = []
+        encVote = []
 
+        rng = Crypto.Random.new()
+
+        # use the EM's public key for blind signatures
+
+        for i in vote:
+            v = EM.paillier_pub.encrypt(i).ciphertext()
+            encVote.append(v)
+            # need to hash b/c paillier encrypted is too long
+            sha = SHA256.new(str(v).encode())
+
+            rlist.append(rng.read(64)) # pick a 64-byte random blinding factor
+            blindVote.append(EM.rsa_pub.blind(sha.digest(), rlist[-1]))
+
+        # get vote signed by EM
+        signedVote = EM.registerVote(voterID, blindVote)
+        unblindVote = []
+
+        # make sure we got a real result from signing
         if signedVote != None:
-            BB.addVote(signedVote)
+            # now need to unblind message
+            for i in range(len(signedVote)):
+                v = EM.rsa_pub.unblind(signedVote[i], rlist[i])
+                unblindVote.append((v, encVote[i]))
+
+            BB.addVote(unblindVote)
 
     # now total and display the results
     BB.tallyResults()

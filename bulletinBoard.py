@@ -1,3 +1,4 @@
+from Crypto.Hash import SHA256 
 from phe import paillier
 
 # BulletinBoard - tally votes and send results to EM
@@ -12,11 +13,18 @@ class BulletinBoard:
 
     def addVote(self, vote):
 
+        # first, verify signature of vote
+        for v in vote:
+            sha = SHA256.new(str(v[1]).encode()) # get hash of encrypted vote
+            if not self.electionBoard.rsa_pub.verify(sha.digest(), (v[0],)):
+                print ("Vote tampered with! discounting")
+                return
+
         # verify each vote is only for one candidate
         total = 0
 
         for i in vote:
-            total = total + i    # for now, just use second part of tuple
+            total = total + i[1]    # for now just use second part of tuple
 
         # TODO: engage ZKP
         #if total != 1:
@@ -33,7 +41,7 @@ class BulletinBoard:
         # now actually tally the votes
         for vote in self.voteBoard:
             for i in range(len(vote)):
-                paillierVote = paillier.EncryptedNumber(self.electionBoard.public_key, vote[i])
+                paillierVote = paillier.EncryptedNumber(self.electionBoard.paillier_pub, vote[i][1])
                 totals[i] = totals[i] + paillierVote
 
         # report results to EM

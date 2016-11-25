@@ -1,17 +1,20 @@
 from phe import paillier
+from Crypto.PublicKey import RSA
 
 # ElectionBoard - contains code for managing voters and results
 
 class ElectionBoard:
 
     def __init__(self):
-        self.public_key, self.private_key = paillier.generate_paillier_keypair()
+        self.paillier_pub, self.paillier_priv = paillier.generate_paillier_keypair()
+        self.rsa_priv = RSA.generate(1024)
+        self.rsa_pub = self.rsa_priv.publickey()
         self.registeredVoters = []
 
     # check if the voter has registered/voted yet, and sign their vote if not
     def registerVote(self, voterID, vote):
 
-        # we may need to split this if we're required to separate registration from voting
+        # TODO: split this to separate registration from voting
         if voterID not in self.registeredVoters:
             self.registeredVoters.append(voterID)
             return self.signVote(vote)
@@ -22,17 +25,18 @@ class ElectionBoard:
     # apply a signature to the vote and send it back
     def signVote(self, vote):
         res = []
+        # test to make sure votes were blinded properly
         for i in vote:
-            #TODO: encrypt votes with blind signature
-            res.append(self.public_key.encrypt(i).ciphertext())
-        print([str(i)[0:10] for i in res])
+            v = self.rsa_priv.sign(i, 0) # NOTE: 0 maybe should be changed to something else
+            res.append(v[0]) # the signature is in the first part
+
         return res
 
     # get encrypted totals and report them
     def reportResults(self, encrypted_results):
         # TODO: decrypt totals
 
-        results = [self.private_key.raw_decrypt(x) for x in encrypted_results]
+        results = [self.paillier_priv.raw_decrypt(x) for x in encrypted_results]
 
         index = -1
         total = -1
