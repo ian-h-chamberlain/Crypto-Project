@@ -1,10 +1,12 @@
 # ElectionBoard - contains code for managing voters and results
-
+from phe import paillier
+import utilities
 class ElectionBoard:
 
     def __init__(self):
         self.registeredVoters = []
         self.signature = "SIGNED"
+        self.public_key,self._private_key = paillier.generate_paillier_keypair()
 
     # check if the voter has registered/voted yet, and sign their vote if not
     def registerVote(self, voterID, vote):
@@ -25,19 +27,23 @@ class ElectionBoard:
             res.append((self.signature, i))
         return res
 
+    # Checks the validity of the "sum" of the votes to be one
+    def checkValidity(self,total):
+        print(utilities.palDecrypt(self._private_key,total))
+        return utilities.palDecrypt(self._private_key,total)==1
     # get encrypted totals and report them
     def reportResults(self, results):
         # TODO: decrypt totals
-
+        totals = [utilities.palDecrypt(self._private_key,x) for x in results]
         index = -1
         total = -1
-        for i in range(len(results)):
-            if total < results[i]:
+        for i in range(len(totals)):
+            if total < totals[i]:
                 index = i
-                total = results[i]
+                total = totals[i]
 
         # TODO: show ties, maybe?
         print("Candidate " + str(index) + " wins!")
         print("Vote breakdown:")
-        for i in range(len(results)):
-            print("\tCandidate " + str(i) + ": " + str(results[i]) + " votes")
+        for i in range(len(totals)):
+            print("\tCandidate " + str(i) + ": " + str(totals[i]) + " votes")

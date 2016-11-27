@@ -1,7 +1,8 @@
 import sys
+from phe import paillier
 from electionBoard import ElectionBoard
 from bulletinBoard import BulletinBoard
-
+import utilities
 def main():
 
     # initialize election
@@ -10,8 +11,11 @@ def main():
     if numCandidates < 2:
         print("Number of candidates is too low!")
         sys.exit()
-
+    #This controls the number of iterations for the ZKP
+    t = 5
+    
     EM = ElectionBoard()
+    public_key = EM.public_key
     BB = BulletinBoard(EM, numCandidates)
 
     # collect votes until voting ends
@@ -35,13 +39,24 @@ def main():
 
         vote = [0 for i in range(numCandidates)]
         vote[voteIndex] = 1
-
+        
         # get vote signed by EM
         signedVote = EM.registerVote(voterID, vote)
         
         if signedVote != None:
-            BB.addVote(signedVote)
-
+            #unsign?
+            ctxts = [0 for i in range(numCandidates)]
+            for i in range(numCandidates):
+                c,x = utilities.palEncrypt(public_key,vote[i])
+                u,r,s = utilities.palEncryptRan(public_key)
+                for iter in range(0,t):
+                    e = BB.sendVote(c,u)
+                    v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
+                    if (not BB.sendAnswer(v,w)):
+                        print("Vote has been tampered")
+                        #TODO: decide what to do
+                ctxts[i] = c
+            BB.addVote(ctxts)
     # now total and display the results
     BB.tallyResults()
 
