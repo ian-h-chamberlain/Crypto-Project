@@ -1,4 +1,6 @@
 from random import randint
+import Crypto.Random.random
+import Crypto.Util.number
 # Computes x^e%m
 def expmod(x,e,m):
     X = x
@@ -12,22 +14,12 @@ def expmod(x,e,m):
             Y = (X * Y) % m
             E = E - 1
     return Y
-#Iterative algorithm for Euclidean's Algorithm 
-def xgcd(b, n):
-    x0, x1, y0, y1 = 1, 0, 0, 1
-    while n != 0:
-        q, b, n = b // n, n, b % n
-        x0, x1 = x1, x0 - q * x1
-        y0, y1 = y1, y0 - q * y1
-    return  b, x0, y0
-# x = mulinv(b) mod n, (x * b) % n == 1
+# Calculates the multiplicative inverse of b mod n
 def mulinv(b, n):
-    g, x, _ = xgcd(b, n)
-    if g == 1:
-        return x % n
+    return Crypto.Util.number.inverse(b,n)
 #wrapper for easy change of random number generator
 def getRandInt(a,b):
-    return randint(a,b)
+    return Crypto.Random.random.randint(a,b)
 #uses paillier encryption to encrypt a random number r (for ZKP)
 def palEncryptRan(public_key):
     n = public_key.n
@@ -65,6 +57,6 @@ def checkChallenge(public_key,u,e,c,v,w):
     n2 = n*n
     ans = (expmod(g,v,n2)*expmod(c,e,n2)%n2)*expmod(w,n,n2)%n2
     return ans==u
-
+#Uses the private key to decrypt a paillier encrypted value
 def palDecrypt(private_key,value):
     return private_key.raw_decrypt(value)

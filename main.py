@@ -25,7 +25,6 @@ def main():
         voterID = getInt("\nPlease enter your voter registration number: ")
         # may also need to register voter before actually voting
 
-        # TODO: encrypt votes
         print("Candidate choices: " + str([i for i in range(numCandidates)]))
         voteIndex = getInt("Please enter your vote (-1 to end voting): ")
 
@@ -46,10 +45,11 @@ def main():
         if signedVote != None:
             #unsign?
             ctxts = [0 for i in range(numCandidates)]
+            #ZKP occurs for each candidate in the vote
             for i in range(numCandidates):
                 c,x = utilities.palEncrypt(public_key,vote[i])
-                u,r,s = utilities.palEncryptRan(public_key)
                 for iter in range(0,t):
+                    u,r,s = utilities.palEncryptRan(public_key)
                     e = BB.sendVote(c,u)
                     v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
                     if (not BB.sendAnswer(v,w)):
