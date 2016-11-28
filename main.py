@@ -12,7 +12,7 @@ def main():
         print("Number of candidates is too low!")
         sys.exit()
     #This controls the number of iterations for the ZKP
-    t = 5
+    t = 3
     
     EM = ElectionBoard()
     public_key = EM.public_key
@@ -45,6 +45,7 @@ def main():
         if signedVote != None:
             #unsign?
             ctxts = [0 for i in range(numCandidates)]
+            allowVote=True
             #ZKP occurs for each candidate in the vote
             for i in range(numCandidates):
                 c,x = utilities.palEncrypt(public_key,vote[i])
@@ -54,9 +55,13 @@ def main():
                     v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
                     if (not BB.sendAnswer(v,w)):
                         print("Vote has been tampered")
-                        #TODO: decide what to do
+                        allowVote=False
+                        break
                 ctxts[i] = c
-            BB.addVote(ctxts)
+                if not allowVote:
+                    break
+            if allowVote:
+                BB.addVote(ctxts)
     # now total and display the results
     BB.tallyResults()
 

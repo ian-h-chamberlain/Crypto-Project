@@ -29,7 +29,6 @@ class ElectionBoard:
 
     # Checks the validity of the "sum" of the votes to be one
     def checkValidity(self,total):
-        print(utilities.palDecrypt(self._private_key,total))
         return utilities.palDecrypt(self._private_key,total)==1
     # get encrypted totals and report them
     def reportResults(self, results):

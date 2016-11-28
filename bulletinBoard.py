@@ -11,6 +11,7 @@ class BulletinBoard:
         self.electionBoard = em
         self.public_key = em.public_key
         self.A = int(math.log(self.public_key.n))**100
+
     def sendVote(self,ctxt,u):
         self.temp_ctxt = ctxt
         self.u = u
