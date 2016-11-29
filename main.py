@@ -23,18 +23,21 @@ def main():
     rsa_ukey = EM.startRegistration(mac_ukey)
     while True:
 
-        voterID = getInt("\nPlease enter a voter registration number: (-1 to end registration) ")
+        voterID = getInt("\nPlease enter a voter registration number (-1 to end registration): ")
         if voterID < 0:
             # end registration
             break
-        #TODO:Encrypt voterID with private key
+        #Sign voterID with private mac key
+        signature = utilities.rsaSign(mac_rkey,voterID)
         #Encrypt voterID with EM public key
         ctxt = utilities.rsaEncrypt(rsa_ukey,voterID)
-        #Send to EM
-        EM.register(ctxt)
-        
-        
-    # collect votes until voting ends
+        #Register with EM
+        EM.register(ctxt,signature)
+
+    print("Registration is closed.")
+    print("Voting begins.")
+
+    # Collect votes until voting ends
     while True:
 
         # TODO: encrypt voter number

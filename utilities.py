@@ -3,6 +3,8 @@ from Crypto.Random import random
 from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA
 
 # Computes x^e%m
 def expmod(x,e,m):
@@ -70,9 +72,18 @@ def createRSAkeys():
     ukey = rkey.publickey()
     return ukey,rkey
 def rsaEncrypt(key,message):
+    #TODO: use better than SHA-1
     cipher = PKCS1_OAEP.new(key)
 
     return cipher.encrypt(str(message).encode('ascii'))
 def rsaDecrypt(key,ciphertext):
     cipher = PKCS1_OAEP.new(key)
     return int(cipher.decrypt(ciphertext).decode())
+def rsaSign(key,message):
+    h = SHA.new(str(message).encode('ascii'))
+    signer = PKCS1_v1_5.new(key)
+    return signer.sign(h)
+def rsaVerify(key,message,signature):
+    h = SHA.new(str(message).encode('ascii'))
+    verifier = PKCS1_v1_5.new(key)
+    return verifier.verify(h, signature)

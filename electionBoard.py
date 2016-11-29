@@ -10,6 +10,7 @@ class ElectionBoard:
         self.signature = "SIGNED"
         self.public_key,self._private_key = paillier.generate_paillier_keypair()
 
+    #Prepares keys for registration
     def startRegistration(self,mac_ukey):
         self.mac_ukey = mac_ukey
         ukey,self._rsa_rkey =utilities.createRSAkeys()
@@ -21,15 +22,17 @@ class ElectionBoard:
             return True
         print("This voter is already registered!")
         return False
-
     #Register a new voter
-    def register(self,cID):
+    def register(self,cID,signature):
         #Decrypt voterID
         voterID = utilities.rsaDecrypt(self._rsa_rkey,cID)
-        #TODO: Decrypt using public mac key
+        #Verify using public mac key
+        if not utilities.rsaVerify(self.mac_ukey,voterID,signature):
+            print("Registration is not from a verified source. Ignoring...")
+            return False
         #TODO:cryptographically hash voterID
-        
         return self.registerVote(voterID)
+    
     #Check to make sure voter is registered and hasn't already voted
     def checkRegistration(self,cID):
         #TODO: Decrypt voterID
