@@ -71,16 +71,20 @@ def createRSAkeys():
     rkey = RSA.generate(2048)
     ukey = rkey.publickey()
     return ukey,rkey
+#Encrypts using rsa public key
 def rsaEncrypt(key,message):
     cipher = PKCS1_OAEP.new(key,SHA256)
     return cipher.encrypt(str(message).encode('ascii'))
+#Decrypts using rsa private key
 def rsaDecrypt(key,ciphertext):
     cipher = PKCS1_OAEP.new(key,SHA256)
     return int(cipher.decrypt(ciphertext).decode())
+#Signs using rsa private key
 def rsaSign(key,message):
     h = SHA256.new(str(message).encode('ascii'))
     signer = PKCS1_v1_5.new(key)
     return signer.sign(h)
+#verifies using rsa public key
 def rsaVerify(key,message,signature):
     h = SHA256.new(str(message).encode('ascii'))
     verifier = PKCS1_v1_5.new(key)

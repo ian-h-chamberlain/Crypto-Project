@@ -46,7 +46,8 @@ def main():
         if voterID < 0:
             #end voting
             break
-        if (not EM.checkRegistration(voterID)):
+        ctxt = utilities.rsaEncrypt(rsa_ukey,voterID)
+        if (not EM.checkRegistration(ctxt)):
             continue
         while True:
             print("Candidate choices: " + str([i for i in range(numCandidates)]))

@@ -15,7 +15,7 @@ class ElectionBoard:
         self.mac_ukey = mac_ukey
         ukey,self._rsa_rkey =utilities.createRSAkeys()
         return ukey
-    # check if the voter has registered/voted yet
+    # check if the voter has registered yet
     def registerVote(self, voterID):
         if voterID not in self.registeredVoters:
             self.registeredVoters.append(voterID)
@@ -30,13 +30,16 @@ class ElectionBoard:
         if not utilities.rsaVerify(self.mac_ukey,voterID,signature):
             print("Registration is not from a verified source. Ignoring...")
             return False
-        #TODO:cryptographically hash voterID
+        #TODO: Don't store voterID in ptxt form?
+        #TODO: Store crytographic hash of voterid, but store ptxt in voted list
         return self.registerVote(voterID)
     
     #Check to make sure voter is registered and hasn't already voted
     def checkRegistration(self,cID):
-        #TODO: Decrypt voterID
-        voterID = cID
+        #Decrypt voterID
+        voterID = utilities.rsaDecrypt(self._rsa_rkey,cID)
+        #TODO: make crytographic hash of voterID
+        #Check if voter is registered
         if voterID in self.registeredVoters:
             if voterID not in self.votedVoters:
                 self.votedVoters.append(voterID)
@@ -59,7 +62,7 @@ class ElectionBoard:
         return utilities.palDecrypt(self._private_key,total)==1
     # get encrypted totals and report them
     def reportResults(self, results):
-        # TODO: decrypt totals
+        # Decrypt totals
         totals = [utilities.palDecrypt(self._private_key,x) for x in results]
         index = -1
         total = -1
