@@ -1,24 +1,48 @@
 # ElectionBoard - contains code for managing voters and results
 from phe import paillier
+from Crypto.Cipher import PKCS1_OAEP
 import utilities
 class ElectionBoard:
 
     def __init__(self):
         self.registeredVoters = []
+        self.votedVoters = []
         self.signature = "SIGNED"
         self.public_key,self._private_key = paillier.generate_paillier_keypair()
 
-    # check if the voter has registered/voted yet, and sign their vote if not
-    def registerVote(self, voterID, vote):
-
-        # we may need to split this if we're required to separate registration from voting
+    def startRegistration(self,mac_ukey):
+        self.mac_ukey = mac_ukey
+        ukey,self._rsa_rkey =utilities.createRSAkeys()
+        return ukey
+    # check if the voter has registered/voted yet
+    def registerVote(self, voterID):
         if voterID not in self.registeredVoters:
             self.registeredVoters.append(voterID)
-            return self.signVote(vote)
-        else:
-            print("Voter tried to register twice!")
-            return None
+            return True
+        print("This voter is already registered!")
+        return False
 
+    #Register a new voter
+    def register(self,cID):
+        #Decrypt voterID
+        voterID = utilities.rsaDecrypt(self._rsa_rkey,cID)
+        #TODO: Decrypt using public mac key
+        #TODO:cryptographically hash voterID
+        
+        return self.registerVote(voterID)
+    #Check to make sure voter is registered and hasn't already voted
+    def checkRegistration(self,cID):
+        #TODO: Decrypt voterID
+        voterID = cID
+        if voterID in self.registeredVoters:
+            if voterID not in self.votedVoters:
+                self.votedVoters.append(voterID)
+                return True
+            else:
+                print("This voter has already voted")
+        else:
+            print("This voter did not register")
+        return False
     # apply a signature to the vote and send it back
     def signVote(self, vote):
         res = []

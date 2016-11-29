@@ -18,21 +18,36 @@ def main():
     public_key = EM.public_key
     BB = BulletinBoard(EM, numCandidates)
 
+    #Register all the voters
+    mac_ukey,mac_rkey = utilities.createRSAkeys()
+    rsa_ukey = EM.startRegistration(mac_ukey)
+    while True:
+
+        voterID = getInt("\nPlease enter a voter registration number: (-1 to end registration) ")
+        if voterID < 0:
+            # end registration
+            break
+        #TODO:Encrypt voterID with private key
+        #Encrypt voterID with EM public key
+        ctxt = utilities.rsaEncrypt(rsa_ukey,voterID)
+        #Send to EM
+        EM.register(ctxt)
+        
+        
     # collect votes until voting ends
     while True:
 
         # TODO: encrypt voter number
-        voterID = getInt("\nPlease enter your voter registration number: ")
-        # may also need to register voter before actually voting
-
-        print("Candidate choices: " + str([i for i in range(numCandidates)]))
-        voteIndex = getInt("Please enter your vote (-1 to end voting): ")
-
-        if voteIndex < 0:
-            # end voting
+        voterID = getInt("\nPlease enter your voter registration number(-1 to end voting): ")
+        if voterID < 0:
+            #end voting
             break
+        if (not EM.checkRegistration(voterID)):
+            continue
+        print("Candidate choices: " + str([i for i in range(numCandidates)]))
+        voteIndex = getInt("Please enter your vote: ")
 
-        if voteIndex >= numCandidates:
+        if voteIndex >= numCandidates or voteIndex<0:
             print ("Invalid vote!")
             continue
 
@@ -40,28 +55,27 @@ def main():
         vote[voteIndex] = 1
         
         # get vote signed by EM
-        signedVote = EM.registerVote(voterID, vote)
+        signedVote = EM.signVote(vote)
         
-        if signedVote != None:
-            #unsign?
-            ctxts = [0 for i in range(numCandidates)]
-            allowVote=True
-            #ZKP occurs for each candidate in the vote
-            for i in range(numCandidates):
-                c,x = utilities.palEncrypt(public_key,vote[i])
-                for iter in range(0,t):
-                    u,r,s = utilities.palEncryptRan(public_key)
-                    e = BB.sendVote(c,u)
-                    v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
-                    if (not BB.sendAnswer(v,w)):
-                        print("Vote has been tampered")
-                        allowVote=False
-                        break
-                ctxts[i] = c
-                if not allowVote:
+
+        ctxts = [0 for i in range(numCandidates)]
+        allowVote=True
+        #ZKP occurs for each candidate in the vote
+        for i in range(numCandidates):
+            c,x = utilities.palEncrypt(public_key,vote[i])
+            for iter in range(0,t):
+                u,r,s = utilities.palEncryptRan(public_key)
+                e = BB.sendVote(c,u)
+                v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
+                if (not BB.sendAnswer(v,w)):
+                    print("Vote has been tampered")
+                    allowVote=False
                     break
-            if allowVote:
-                BB.addVote(ctxts)
+            ctxts[i] = c
+            if not allowVote:
+                break
+        if allowVote:
+            BB.addVote(ctxts)
     # now total and display the results
     BB.tallyResults()
 

@@ -1,6 +1,9 @@
 from random import randint
-import Crypto.Random.random
-import Crypto.Util.number
+from Crypto.Random import random
+from Crypto.Util import number
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
 # Computes x^e%m
 def expmod(x,e,m):
     X = x
@@ -16,10 +19,10 @@ def expmod(x,e,m):
     return Y
 # Calculates the multiplicative inverse of b mod n
 def mulinv(b, n):
-    return Crypto.Util.number.inverse(b,n)
+    return number.inverse(b,n)
 #wrapper for easy change of random number generator
 def getRandInt(a,b):
-    return Crypto.Random.random.randint(a,b)
+    return random.randint(a,b)
 #uses paillier encryption to encrypt a random number r (for ZKP)
 def palEncryptRan(public_key):
     n = public_key.n
@@ -60,3 +63,16 @@ def checkChallenge(public_key,u,e,c,v,w):
 #Uses the private key to decrypt a paillier encrypted value
 def palDecrypt(private_key,value):
     return private_key.raw_decrypt(value)
+
+#Generates a public/private key using RSA
+def createRSAkeys():
+    rkey = RSA.generate(2048)
+    ukey = rkey.publickey()
+    return ukey,rkey
+def rsaEncrypt(key,message):
+    cipher = PKCS1_OAEP.new(key)
+
+    return cipher.encrypt(str(message).encode('ascii'))
+def rsaDecrypt(key,ciphertext):
+    cipher = PKCS1_OAEP.new(key)
+    return int(cipher.decrypt(ciphertext).decode())
