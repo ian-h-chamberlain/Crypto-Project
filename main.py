@@ -59,23 +59,27 @@ def main():
         
 
         ctxts = [0 for i in range(numCandidates)]
-        allowVote=True
+        allowVote=False
+        print("Sending vote...")
         #ZKP occurs for each candidate in the vote
-        for i in range(numCandidates):
-            c,x = utilities.palEncrypt(public_key,vote[i])
-            for iter in range(0,t):
-                u,r,s = utilities.palEncryptRan(public_key)
-                e = BB.sendVote(c,u)
-                v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
-                if (not BB.sendAnswer(v,w)):
-                    print("Vote has been tampered")
-                    allowVote=False
+        while not allowVote:
+            allowVote=True
+            for i in range(numCandidates):
+                c,x = utilities.palEncrypt(public_key,vote[i])
+                for iter in range(0,t):
+                    u,r,s = utilities.palEncryptRan(public_key)
+                    e = BB.sendVote(c,u)
+                    v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
+                    if (not BB.sendAnswer(v,w)):
+                        print("Vote has been tampered with, Trying to send again...")
+                        allowVote=False
+                        break
+                    ctxts[i] = c
+                if not allowVote:
                     break
-            ctxts[i] = c
-            if not allowVote:
-                break
-        if allowVote:
-            BB.addVote(ctxts)
+            if allowVote:
+                BB.addVote(ctxts)
+                
     # now total and display the results
     BB.tallyResults()
 
