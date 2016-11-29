@@ -38,6 +38,7 @@ def main():
     print("Voting begins.")
 
     # Collect votes until voting ends
+    
     while True:
 
         # TODO: encrypt voter number
