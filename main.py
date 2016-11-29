@@ -44,13 +44,12 @@ def main():
             break
         if (not EM.checkRegistration(voterID)):
             continue
-        print("Candidate choices: " + str([i for i in range(numCandidates)]))
-        voteIndex = getInt("Please enter your vote: ")
-
-        if voteIndex >= numCandidates or voteIndex<0:
-            print ("Invalid vote!")
-            continue
-
+        while True:
+            print("Candidate choices: " + str([i for i in range(numCandidates)]))
+            voteIndex = getInt("Please enter your vote: ")
+            if not (voteIndex >= numCandidates or voteIndex<0):
+                break
+            print ("Invalid vote! Try again")
         vote = [0 for i in range(numCandidates)]
         vote[voteIndex] = 1
         
