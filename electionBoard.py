@@ -31,14 +31,12 @@ class ElectionBoard:
             print("Registration is not from a verified source. Ignoring...")
             return False
         #TODO: Don't store voterID in ptxt form?
-        #TODO: Store crytographic hash of voterid, but store ptxt in voted list
         return self.registerVote(voterID)
     
     #Check to make sure voter is registered and hasn't already voted
     def checkRegistration(self,cID):
         #Decrypt voterID
         voterID = utilities.rsaDecrypt(self._rsa_rkey,cID)
-        #TODO: make crytographic hash of voterID
         #Check if voter is registered
         if voterID in self.registeredVoters:
             if voterID not in self.votedVoters:
@@ -57,9 +55,17 @@ class ElectionBoard:
             res.append((self.signature, i))
         return res
 
-    # Checks the validity of the "sum" of the votes to be one
-    def checkValidity(self,total):
-        return utilities.palDecrypt(self._private_key,total)==1
+    # Checks the validity of a randomly permuted vote list
+    def checkValidity(self,votes):
+        
+        total = 0
+        for i in votes:
+            v = utilities.palDecrypt(self._private_key,i)
+            total+=v
+            if v!=0 and v!=1:
+                return False
+            
+        return total==1
     # get encrypted totals and report them
     def reportResults(self, results):
         # Decrypt totals

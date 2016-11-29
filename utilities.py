@@ -89,3 +89,14 @@ def rsaVerify(key,message,signature):
     h = SHA256.new(str(message).encode('ascii'))
     verifier = PKCS1_v1_5.new(key)
     return verifier.verify(h, signature)
+
+#returns a random permutation of the given list
+def permute(vote):
+    new_list = vote[:]
+    length = len(vote)
+    for i in range(length-1):
+        j = getRandInt(i,length)
+        tmp = new_list[j]
+        new_list[j] = new_list[i]
+        new_list[i] = tmp
+    return new_list

@@ -22,17 +22,15 @@ class BulletinBoard:
     def addVote(self, vote):
         n2 = self.public_key.n**2
         
-        # verify each vote is only for one candidate
-        #TODO: verify each vote is either 0 or 1
-        total = 0
+        ''' verify each vote is only for one candidate
+            verification strategy:
+            Randomly permute the vote array
+            Send to EM 
+            EM checks each value is 0 or 1 and the sum is 1
+        '''
+        permute = utilities.permute(vote)
 
-        for i in vote:
-            if total==0:
-                total = i
-            else:
-                total = total*i%n2
-
-        if not self.electionBoard.checkValidity(total):
+        if not self.electionBoard.checkValidity(permute):
             print("Invalid vote detected!")
             return # cannot count this vote
 
