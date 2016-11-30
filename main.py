@@ -1,3 +1,4 @@
+import time
 import sys
 from electionBoard import ElectionBoard
 from bulletinBoard import BulletinBoard
@@ -34,11 +35,9 @@ def main():
     print("Registration is closed.")
     print("Voting begins.")
 
-    # Collect votes until voting ends
-
     #This controls the number of iterations for the ZKP
     t = 3
-
+    # Collect votes until voting ends
     while True:
 
         voterID = getInt("\nPlease enter your voter registration number(-1 to end voting): ")
@@ -84,6 +83,7 @@ def main():
         allowVote=False
         ZKP_LIMIT = 15
         zkp_iter = 0
+        t0 = time.time()
         while not allowVote:
             BB.sendVote(ctxts,unblind)
             allowVote=True
@@ -105,7 +105,8 @@ def main():
                 break
         if allowVote:
             BB.acceptVote()
-
+        t1 = time.time()
+        print(t1-t0)
     # now total and display the results
     BB.tallyResults()
 
