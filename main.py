@@ -10,8 +10,6 @@ def main():
     if numCandidates < 2:
         print("Number of candidates is too low!")
         sys.exit()
-    #This controls the number of iterations for the ZKP
-    t = 3
     
     EM = ElectionBoard()
     public_key = EM.public_key
@@ -37,10 +35,12 @@ def main():
     print("Voting begins.")
 
     # Collect votes until voting ends
-    
+
+    #This controls the number of iterations for the ZKP
+    t = 3
+
     while True:
 
-        # TODO: encrypt voter number
         voterID = getInt("\nPlease enter your voter registration number(-1 to end voting): ")
         if voterID < 0:
             #end voting

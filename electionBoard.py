@@ -1,14 +1,13 @@
-from phe import paillier
-from Crypto.PublicKey import RSA
+
 
 # ElectionBoard - contains code for managing voters and results
 from phe import paillier
+from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import utilities
 class ElectionBoard:
 
     def __init__(self):
-        self.paillier_pub, self.paillier_priv = paillier.generate_paillier_keypair()
         self.rsa_priv = RSA.generate(1024)
         self.rsa_pub = self.rsa_priv.publickey()
         self.registeredVoters = []
