@@ -1,3 +1,4 @@
+import math
 from random import randint
 from phe import paillier
 from Crypto.Random import random
@@ -6,20 +7,9 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
-
 # Computes x^e%m
-def expmod(x,e,m):
-    X = x
-    E = e
-    Y = 1
-    while E > 0:
-        if E % 2 == 0:
-            X = (X * X) % m
-            E = E//2
-        else:
-            Y = (X * Y) % m
-            E = E - 1
-    return Y
+def expmod(x,e,m):    
+    return pow(x,e,m)
 # Calculates the multiplicative inverse of b mod n
 def mulinv(b, n):
     return number.inverse(b,n)
@@ -52,7 +42,7 @@ def answerChallenge(public_key,vote,e,x,r,s):
     g = public_key.g
     n2 = n*n
     v = r-e*vote
-    exp = (r-e*vote)/n
+    exp = math.floor((r-e*vote)/n)
     xe = expmod(x,e,n2)
     w = s*mulinv(xe,n2)*expmod(g,exp,n2) %n2
     return v,w

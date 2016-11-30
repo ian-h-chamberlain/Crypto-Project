@@ -78,7 +78,8 @@ def main():
             # now need to unblind message
             unblind  = EM.rsa_pub.unblind(signedVote, r)
         print("Sending vote...")
-        
+
+
         #ZKP occurs for each candidate in the vote
         allowVote=False
         ZKP_LIMIT = 15
@@ -104,6 +105,7 @@ def main():
                 break
         if allowVote:
             BB.acceptVote()
+
     # now total and display the results
     BB.tallyResults()
 
