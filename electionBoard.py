@@ -35,7 +35,6 @@ class ElectionBoard:
         if not utilities.rsaVerify(self.mac_ukey,voterID,signature):
             print("Registration is not from a verified source. Ignoring...")
             return False
-        #TODO: Don't store voterID in ptxt form?
         return self.registerVote(voterID)
     
     #Check to make sure voter is registered and hasn't already voted

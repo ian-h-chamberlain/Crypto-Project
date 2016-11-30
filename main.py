@@ -57,45 +57,53 @@ def main():
         vote = [0 for i in range(numCandidates)]
         vote[voteIndex] = 1
 
+        #Encrypt vote and store the random numbers for ZKP
         ctxts = [0 for i in range(numCandidates)]
-        allowVote=False
+        xs = [0 for i in range(numCandidates)]
+        for i in range(numCandidates):
+            ctxts[i],xs[i] = utilities.palEncrypt(public_key,vote[i])
+        
+        '''
+           Blind signature process starts here
+
+        '''
+        # now blind the votes before sending to EM to sign
+        blindVote, r = utilities.blind(ctxts, EM.rsa_pub)
+
+        # get vote signed by EM
+        signedVote = EM.signVote(blindVote)
+
+        # make sure we got a real result from signing
+        if signedVote != None:
+            # now need to unblind message
+            unblind  = EM.rsa_pub.unblind(signedVote, r)
         print("Sending vote...")
+        
         #ZKP occurs for each candidate in the vote
+        allowVote=False
+        ZKP_LIMIT = 15
+        zkp_iter = 0
         while not allowVote:
+            BB.sendVote(ctxts,unblind)
             allowVote=True
             for i in range(numCandidates):
-                c,x = utilities.palEncrypt(public_key,vote[i])
+                c = ctxts[i]
+                x = xs[i]
                 for iter in range(0,t):
                     u,r,s = utilities.palEncryptRan(public_key)
-                    e = BB.sendVote(c,u)
+                    e = BB.createChallenge(u,i)
                     v,w = utilities.answerChallenge(public_key,vote[i],e,x,r,s)
                     if (not BB.sendAnswer(v,w)):
-                        print("Vote has been tampered with, Trying to send again...")
+                        print("Vote has been tampered with, Trying to send again")
                         allowVote=False
                         break
-                    ctxts[i] = c
                 if not allowVote:
                     break
-
+            zkp_iter+=1
+            if zkp_iter>ZKP_LIMIT:
+                break
         if allowVote:
-            '''
-                Blind signature process starts here
-
-            '''
-            # now blind the votes before sending to EM to sign
-
-            blindVote, r = utilities.blind(ctxts, EM.rsa_pub)
-
-            # get vote signed by EM
-            signedVote = EM.signVote(blindVote)
-
-            # make sure we got a real result from signing
-            if signedVote != None:
-                # now need to unblind message
-                unblind  = EM.rsa_pub.unblind(signedVote, r)
-
-                BB.addVote(ctxts, unblind)
-                
+            BB.acceptVote()
     # now total and display the results
     BB.tallyResults()
 
