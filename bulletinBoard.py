@@ -19,7 +19,7 @@ class BulletinBoard:
         return self.e
     def sendAnswer(self,v,w):
         return utilities.checkChallenge(self.public_key,self.u,self.e,self.temp_ctxt,v,w)
-    def addVote(self, vote):
+    def addVote(self, vote, signature):
         n2 = self.public_key.n**2
         
         ''' verify each vote is only for one candidate
@@ -33,6 +33,11 @@ class BulletinBoard:
         if not self.electionBoard.checkValidity(permute):
             print("Invalid vote detected!")
             return # cannot count this vote
+
+        # now verify signature of vote
+        if not utilities.verify(vote, signature, self.electionBoard.rsa_pub):
+            print ("Vote tampered with! discounting")
+            return
 
         self.voteBoard.append(vote)
 

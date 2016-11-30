@@ -1,5 +1,4 @@
 import sys
-from phe import paillier
 from electionBoard import ElectionBoard
 from bulletinBoard import BulletinBoard
 import utilities
@@ -57,10 +56,6 @@ def main():
             print ("Invalid vote! Try again")
         vote = [0 for i in range(numCandidates)]
         vote[voteIndex] = 1
-        
-        # get vote signed by EM
-        signedVote = EM.signVote(vote)
-        
 
         ctxts = [0 for i in range(numCandidates)]
         allowVote=False
@@ -81,8 +76,25 @@ def main():
                     ctxts[i] = c
                 if not allowVote:
                     break
-            if allowVote:
-                BB.addVote(ctxts)
+
+        if allowVote:
+            '''
+                Blind signature process starts here
+
+            '''
+            # now blind the votes before sending to EM to sign
+
+            blindVote, r = utilities.blind(ctxts, EM.rsa_pub)
+
+            # get vote signed by EM
+            signedVote = EM.signVote(blindVote)
+
+            # make sure we got a real result from signing
+            if signedVote != None:
+                # now need to unblind message
+                unblind  = EM.rsa_pub.unblind(signedVote, r)
+
+                BB.addVote(ctxts, unblind)
                 
     # now total and display the results
     BB.tallyResults()

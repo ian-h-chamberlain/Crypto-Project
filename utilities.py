@@ -1,4 +1,5 @@
 from random import randint
+from phe import paillier
 from Crypto.Random import random
 from Crypto.Util import number
 from Crypto.PublicKey import RSA
@@ -66,6 +67,22 @@ def checkChallenge(public_key,u,e,c,v,w):
 def palDecrypt(private_key,value):
     return private_key.raw_decrypt(value)
 
+# given an object and key, blind it and return r and blinded val
+def blind(value, key):
+    h = SHA256.new(str(value).encode('ascii'))
+    r = getRandInt(0, 2**(key.size() // 32))
+
+    blinded = key.blind(h.digest(), r)
+
+    return blinded, r
+
+# given an object, signature, and key, verify the signature
+def verify(value, sig, key):
+    # get hash of encrypted vote
+    h = SHA256.new(str(value).encode('ascii'))
+
+    return key.verify(h.digest(), (sig,))
+
 #Generates a public/private key using RSA
 def createRSAkeys():
     rkey = RSA.generate(2048)
@@ -95,7 +112,7 @@ def permute(vote):
     new_list = vote[:]
     length = len(vote)
     for i in range(length-1):
-        j = getRandInt(i,length)
+        j = getRandInt(i,length-1)
         tmp = new_list[j]
         new_list[j] = new_list[i]
         new_list[i] = tmp
