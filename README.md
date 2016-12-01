@@ -6,7 +6,6 @@ This is a simple voting application which is designed to ensure secure voter ano
 Dependencies:
 - [pycrypto](https://www.dlitz.net/software/pycrypto/)
 - [python-paillier](https://python-paillier.readthedocs.io/)
-- [Kivy](https://kivy.org/)
 
 To run, simply execute `python main.py`.
 
@@ -19,3 +18,6 @@ The Election Board is responsible for verifying voter registration and signs vot
 
 ### Bulletin Board - `bulletinBoard.py`
 The Bulletin Board receives and holds encrypted votes from each voter. Because Paillier encryption is used, the votes can be added together to obtain an encrypted total, which is then sent to the Election Board to be decrypted and revealed.
+
+### GUI - `Tkinter`
+The application GUI handles each step in the voting process by creating windows containing entries and buttons which keep the user on track until they reach the end of the program where the winner of the election is revealed.
