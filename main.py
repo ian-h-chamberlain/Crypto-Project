@@ -40,7 +40,6 @@ def RegisterVoter(numCandidates, old_window):
     
     # Require 2 or more candidates
     if(numCandidates >= 2):
-        vote = [0 for i in range(numCandidates)]
         EM = ElectionBoard()
         BB = BulletinBoard(EM, numCandidates)
         
@@ -52,56 +51,68 @@ def RegisterVoter(numCandidates, old_window):
         old_window.destroy()
         window = tk.Toplevel(root)
         window.protocol("WM_DELETE_WINDOW", OnClosing)
-        window.geometry("330x100")
+        window.geometry("330x150")
         center(window)
 	
         # Format window
         window.title("Voter Registration")
         tk.Label(window, text='Please enter a voter registration number', font=('Helvetica', 14)).pack()
-        tk.Label(window, text='(Enter -1 to end registration and begin voting)').pack()
         ent = tk.Entry(window)
         ent.pack()
-        tk.Button(window,text="Enter", command=lambda:	StartVoting(int(ent.get()), ent, vote, EM, BB, mac_rkey, rsa_ukey, window)).pack()
+        error_label = tk.Label(window, text='Voter ID must be a positive number', font=('Helvetica', 14))
+
+        tk.Button(window,text="Register", command=lambda: Register(int(ent.get()), EM, mac_rkey, rsa_ukey, ent,window,error_label)).pack()
+        tk.Button(window,text="End Registration",command=lambda: StartVoting(EM,BB,rsa_ukey,window)).pack()
     else: 
         # Creates an error message if invalid candidates
         tk.Label(old_window, text='Need more than 1 candidate', fg='red').pack()
 
-# Third window
-def StartVoting(voterID, ent, vote, EM, BB, mac_rkey, rsa_ukey, old_window):
-    '''
-        Asks voter for their registration number,
-        if successful window opens to vote for their 
-        candidate. 		
-    '''
-    
-    if(voterID == -1):
-        # Create window
-        old_window.destroy()
-        window = tk.Toplevel(root)
-        window.protocol("WM_DELETE_WINDOW", OnClosing)
-        window.geometry("360x90")
-        center(window)
-        
-    	# Format window
-        window.title("Voting Time!")	
-        tk.Label(window, text='Please enter a voter registration (-1 to end)', font=('Helvetica', 14)).pack()
-        ent = tk.Entry(window)
-        ent.pack()
-        tk.Button(window, text='Next', command=lambda: SendVote(int(ent.get()), vote, EM, BB, rsa_ukey, window)).pack()
-    else:
-        ent.delete(0, "end")
-
+#Process registration
+def Register(voterID,EM,mac_rkey,rsa_ukey,ent,window,error_label):
+    error_label.pack_forget()
+    if (voterID>0):
         #Sign voterID with private mac key
         signature = utilities.rsaSign(mac_rkey,voterID)
-
+        
         #Encrypt voterID with EM public key
         ctxt = utilities.rsaEncrypt(rsa_ukey,voterID)
 
         #Register with EM
         EM.register(ctxt,signature)
 
+
+    else:
+        #Report Error on voterID
+        error_label.pack()
+    #reset text box
+    ent.delete(0,'end')
+# Third window
+def StartVoting(EM, BB, rsa_ukey, old_window):
+    '''
+        Asks voter for their registration number,
+        if successful window opens to vote for their 
+        candidate. 		
+    '''
+    vote = [0 for i in range(BB.numCandidates)]
+    # Create window
+    old_window.destroy()
+    window = tk.Toplevel(root)
+    window.protocol("WM_DELETE_WINDOW", OnClosing)
+    window.geometry("360x130")
+    center(window)
+    
+    # Format window
+    window.title("Voting Time!")	
+    tk.Label(window, text='Please enter a voter registration:', font=('Helvetica', 14)).pack()
+    ent = tk.Entry(window)
+    ent.pack()
+    error_label = tk.Label(window, text = "Voter ID must be a positive number.")
+    tk.Button(window, text='Next', command=lambda: SendVote(int(ent.get()), vote, EM, BB, rsa_ukey, window,ent,error_label)).pack()
+    tk.Button(window, text='End Voting', command=lambda: PostResults(EM, BB, window)).pack()
+    
 # Fourth window
-def SendVote(voterID, vote, EM, BB, rsa_ukey, old_window):
+def SendVote(voterID, vote, EM, BB, rsa_ukey, old_window,old_ent,error_label):
+    error_label.pack_forget()
     '''
         Prompts the user to vote for their 
         candidate otherwise if voting has 
@@ -109,34 +120,14 @@ def SendVote(voterID, vote, EM, BB, rsa_ukey, old_window):
         the election.
     '''
     numCandidates = len(vote)
-    if(voterID == -1):
-        # Gets total counts for all candidates
-        BB.tallyResults()
-
-        # Gets candidate who won
-        winner = findWinner(EM.totals)
-
-        # Display Winner
-        old_window.destroy()
-        window = tk.Toplevel(root)
-        window.protocol("WM_DELETE_WINDOW", OnClosing)
-        window.geometry("250x200")
-        center(window)
-
-        window.title('Results')
-        tk.Label(window, text='Candidate '+str(winner)+' Wins!', fg='green', font=('Helvetica', 18)).pack()
-        for i in range(len(EM.totals)):
-            tk.Label(window, text='Candidate '+ str(i) +': '+ str(EM.totals[i]) + ' votes').pack()
-
-        tk.Button(window, text='Close', command=lambda: CloseWindows(window)).pack(side=tk.BOTTOM)	
-    else:
+    if(voterID > 0):
         ctxt = utilities.rsaEncrypt(rsa_ukey,voterID)
         if (EM.checkRegistration(ctxt)):
             # Vote for candidate
             old_window.destroy()
             window = tk.Toplevel(root)
             window.protocol("WM_DELETE_WINDOW", OnClosing)
-            window.geometry("220x140")	
+            window.geometry("320x140")	
             center(window)
 
             window.title("Cast Vote")
@@ -145,12 +136,16 @@ def SendVote(voterID, vote, EM, BB, rsa_ukey, old_window):
             tk.Label(window, text='Please enter your vote').pack()
             ent = tk.Entry(window)
             ent.pack()
-            tk.Button(window, text='Vote', command=lambda: NextVoter(int(ent.get()), vote, EM, BB, rsa_ukey, window)).pack()
-
+            error_label = tk.Label(window, text = "You must vote for one of the available candidates")
+            tk.Button(window, text='Vote', command=lambda: NextVoter(int(ent.get()), vote, EM, BB, rsa_ukey, window,ent,error_label)).pack()
+    else:
+        error_label.pack()
+        #reset text box
+        old_ent.delete(0,'end')
 # Prompts user again for their voter registration number
-def NextVoter(voteIndex, vote, EM, BB, rsa_ukey, old_window):
+def NextVoter(voteIndex, vote, EM, BB, rsa_ukey, old_window,old_ent,error_label):
     numCandidates = len(vote) 
-
+    error_label.pack_forget()
     # Iterations for ZKP
     t = 3
     if not (voteIndex >= numCandidates or voteIndex < 0):
@@ -187,7 +182,6 @@ def NextVoter(voteIndex, vote, EM, BB, rsa_ukey, old_window):
         allowVote=False
         ZKP_LIMIT = 15
         zkp_iter = 0
-        t0 = time.time()
         while not allowVote:
             BB.sendVote(ctxts,unblind)
             allowVote=True
@@ -209,23 +203,49 @@ def NextVoter(voteIndex, vote, EM, BB, rsa_ukey, old_window):
                 break
         if allowVote:
             BB.acceptVote()
-        t1 = time.time()
-        print(t1-t0)
 
         old_window.destroy()
         window = tk.Toplevel(root)
         window.protocol("WM_DELETE_WINDOW", OnClosing)
-        window.geometry("360x90")
+        window.geometry("360x130")
         center(window)
         window.title("Voting Time!")
-    	
-        tk.Label(window, text='Please enter a voter registration (-1 to end)', font=('Helvetica', 14)).pack()
+        
+        tk.Label(window, text='Please enter a voter registration:', font=('Helvetica', 14)).pack()
         ent = tk.Entry(window)
         ent.pack()
-
         vote = [0 for i in range(numCandidates)]
-        tk.Button(window, text='Next', command=lambda: SendVote(int(ent.get()), vote, EM, BB, rsa_ukey, window)).pack()
+        error_label = tk.Label(window, text = "You must vote for one of the available candidates")
+        tk.Button(window, text='Next', command=lambda: SendVote(int(ent.get()), vote, EM, BB, rsa_ukey, window,ent,error_label)).pack()
+        tk.Button(window, text='End Voting', command=lambda: PostResults(EM, BB, window)).pack()
+    else:
+        error_label.pack()
+        #reset text box
+        old_ent.delete(0,'end')
+        
 
+
+#Posts results
+def PostResults(EM,BB,old_window):
+    # Gets total counts for all candidates
+    BB.tallyResults()
+    
+    # Gets candidate who won
+    winner = findWinner(EM.totals)
+    
+    # Display Winner
+    old_window.destroy()
+    window = tk.Toplevel(root)
+    window.protocol("WM_DELETE_WINDOW", OnClosing)
+    window.geometry("250x200")
+    center(window)
+    
+    window.title('Results')
+    tk.Label(window, text='Candidate '+str(winner)+' Wins!', fg='green', font=('Helvetica', 18)).pack()
+    for i in range(len(EM.totals)):
+        tk.Label(window, text='Candidate '+ str(i) +': '+ str(EM.totals[i]) + ' votes').pack()            
+    tk.Button(window, text='Close', command=lambda: CloseWindows(window)).pack(side=tk.BOTTOM)	
+            
 # Closes all windows
 def CloseWindows(old_window):
     old_window.destroy()

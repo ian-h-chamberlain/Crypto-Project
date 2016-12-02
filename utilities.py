@@ -19,21 +19,15 @@ def getRandInt(a,b):
 #uses paillier encryption to encrypt a random number r (for ZKP)
 def palEncryptRan(public_key):
     n = public_key.n
-    #g = public_key.g
-    #n2 = n*n
     r = getRandInt(0,n)
     s = getRandInt(0,n)
     u= public_key.raw_encrypt(r,s)
-    #u = expmod(g,r,n2)*expmod(s,n,n2)% n2
     return u,r,s
 #uses paillier encryption to encrypt the number ptxt
 def palEncrypt(public_key,ptxt):
     n = public_key.n
-    #g = public_key.g
-    #n2 = n*n
     x = getRandInt(0,n)
     c= public_key.raw_encrypt(ptxt,x)
-    #c = expmod(g,ptxt,n2)*expmod(x,n,n2)% n2
     return c, x
 #Constructs a challenge for ZKP
 def makeChallenge(A):

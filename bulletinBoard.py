@@ -47,14 +47,14 @@ class BulletinBoard:
 
         # initialize the total
         totals = [0 for i in range(self.numCandidates)]
+        #Encrypt the 0s for summing
+        for i in range(len(totals)):
+            totals[i],_ = utilities.palEncrypt(self.electionBoard.public_key,0)
 
         # now actually tally the votes
         for vote in self.voteBoard:
             for i in range(len(vote)):
-                if totals[i]==0:
-                    totals[i] = vote[i]
-                else:
-                    totals[i] = totals[i]*vote[i]
+                totals[i] = totals[i]*vote[i]
 
         # report results to EM
         self.electionBoard.reportResults(totals)
