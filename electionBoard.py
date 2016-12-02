@@ -12,8 +12,10 @@ class ElectionBoard:
         self.rsa_pub = self.rsa_priv.publickey()
         self.registeredVoters = []
         self.votedVoters = []
+        self.totals = []
         self.signature = "SIGNED"
         self.public_key,self._private_key = paillier.generate_paillier_keypair()
+
 
     #Prepares keys for registration
     def startRegistration(self,mac_ukey):
@@ -51,6 +53,7 @@ class ElectionBoard:
         else:
             print("This voter did not register")
         return False
+
     # apply a signature to the vote and send it back
     def signVote(self, vote):
         # test to make sure votes were blinded properly
@@ -69,19 +72,9 @@ class ElectionBoard:
                 return False
             
         return total==1
+
     # get encrypted totals and report them
     def reportResults(self, results):
         # Decrypt totals
-        totals = [utilities.palDecrypt(self._private_key,x) for x in results]
-        index = -1
-        total = -1
-        for i in range(len(totals)):
-            if total < totals[i]:
-                index = i
-                total = totals[i]
+        self.totals = [utilities.palDecrypt(self._private_key,x) for x in results]
 
-        # TODO: show ties, maybe?
-        print("Candidate " + str(index) + " wins!")
-        print("Vote breakdown:")
-        for i in range(len(totals)):
-            print("\tCandidate " + str(i) + ": " + str(totals[i]) + " votes")
